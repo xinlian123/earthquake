@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -8,13 +10,27 @@
         android:layout_height="wrap_content" >
         -<RelativeLayout android:layout_height="wrap_content" android:layout_width="match_parent">
 
-        <ImageView android:layout_height="wrap_content" android:layout_width="wrap_content" android:src="@android:drawable/ic_dialog_alert" android:id="@+id/iconInfo"/>
+        <ImageView
+            android:id="@+id/iconInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_dialog_alert"
+            android:tint="@color/colorInfo"
+            tools:ignore="UseAppTint" />
 
-        <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/winTitle" android:layout_toRightOf="@id/iconInfo" android:text="Hello" android:textSize="16sp" android:textStyle="bold"/>
+        <TextView
+            android:id="@+id/winTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/iconInfo"
+            android:text="Hello"
+            android:textColor="@android:color/black"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/magnitude" android:layout_toRightOf="@id/iconInfo" android:text="magnitude" android:layout_below="@id/winTitle"/>
 
-        <Button android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/btn" android:layout_toRightOf="@id/magnitude" android:text="More info..." android:textColor="@color/colorAccent" android:background="@android:color/transparent" android:layout_alignBottom="@id/magnitude" android:layout_marginLeft="6dp"/>
+        <Button android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/btn" android:layout_toRightOf="@id/magnitude" android:text="More details.." android:textColor="@color/colorInfo" android:background="@android:color/transparent" android:layout_alignBottom="@id/magnitude" android:layout_marginLeft="6dp"/>
 
     </RelativeLayout>
     </androidx.cardview.widget.CardView>

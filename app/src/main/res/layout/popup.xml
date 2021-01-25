@@ -14,7 +14,7 @@
 
             <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="More Information" android:textStyle="bold" android:textSize="18sp" android:layout_centerHorizontal="true" android:id="@+id/popTitle"/>
 
-            <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:padding="8dp" android:text="Surrounding Cities" android:textSize="17sp" android:id="@+id/popListTitle" android:layout_below="@id/popTitle"/>
+            <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:padding="8dp" android:text="Nearby Cities and Details" android:textSize="17sp" android:id="@+id/popListTitle" android:layout_below="@id/popTitle"/>
 
             <Button android:layout_height="20dp" android:layout_width="20dp" android:id="@+id/dismissPopTop" android:layout_alignBottom="@+id/popListTitle" android:background="@android:drawable/ic_menu_close_clear_cancel" android:layout_alignParentRight="true"/>
 
@@ -22,9 +22,19 @@
 
             <WebView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/htmlWebview" android:layout_below="@id/popList"> </WebView>
 
-            <Button android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="Close" android:textStyle="bold" android:layout_centerHorizontal="true" android:id="@+id/dismissPop" android:layout_below="@id/htmlWebview" android:background="@color/colorAccent" android:textColor="@android:color/white"/>
+                <Button
+                    android:id="@+id/dismissPopUp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/htmlWebview"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="20dp"
+                    android:background="@color/colorAccent"
+                    android:text="Close"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold" />
 
-        </RelativeLayout>
+            </RelativeLayout>
         </androidx.cardview.widget.CardView>
     </ScrollView>
 </LinearLayout>

@@ -7,6 +7,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -16,14 +17,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -45,10 +47,8 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
-import static androidx.core.os.LocaleListCompat.create;
-
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
-GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMapClickListener{
+        GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMapClickListener{
 
     private GoogleMap mMap;
     private LocationListener locationListener;
@@ -56,6 +56,9 @@ GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMapClickListener{
     private RequestQueue queue;
     private AlertDialog.Builder dialogBuilder;
     private AlertDialog dialog;
+    private Button KbBtn;
+    StringBuilder stringBuilder = new StringBuilder();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +67,15 @@ GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMapClickListener{
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        KbBtn = (Button) findViewById(R.id.kbBtn);
+        KbBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MapsActivity.this, QuakeKb.class));
+            }
+        });
+
         queue = Volley.newRequestQueue(this);
         getEarthQuakes();
     }
@@ -111,7 +123,7 @@ GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMapClickListener{
 
 
             } else {
-                // we have permission!
+                //we have permission
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
                 Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
@@ -170,30 +182,31 @@ GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMapClickListener{
 
                                 java.text.DateFormat dateFormat = java.text.DateFormat.getDateInstance();
                                 String formattedDate =  dateFormat.format(new Date(Long.valueOf(properties.getLong("time"))).getTime());
+                                if (earthQuake.getMagnitude() >= 2.0) {
+                                    MarkerOptions markerOptions = new MarkerOptions();
 
-                                MarkerOptions markerOptions = new MarkerOptions();
+                                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
 
-                                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                                markerOptions.title(earthQuake.getPlace());
-                                markerOptions.position(new LatLng(lat, lon));
-                                markerOptions.snippet("Magnitude: " + earthQuake.getMagnitude() + "\n"
-                                        + "Date: " + formattedDate);
+                                    markerOptions.title(earthQuake.getPlace());
+                                    markerOptions.position(new LatLng(lat, lon));
+                                    markerOptions.snippet("Magnitude: " + earthQuake.getMagnitude() + "\n"
+                                            + "Date: " + formattedDate);
 
-                                if (earthQuake.getMagnitude() >= 4.5) {
-                                    CircleOptions circleOptions = new CircleOptions();
-                                    circleOptions.center(new LatLng(earthQuake.getLat(), earthQuake.getLon()));
-                                    circleOptions.radius(30000);
-                                    circleOptions.strokeWidth(3.6f);
-                                    circleOptions.fillColor(Color.RED);
-                                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                                    if (earthQuake.getMagnitude() >= 4.5) {
+                                        CircleOptions circleOptions = new CircleOptions();
+                                        circleOptions.center(new LatLng(earthQuake.getLat(), earthQuake.getLon()));
+                                        circleOptions.radius(30000);
+                                        circleOptions.strokeWidth(3.6f);
+                                        circleOptions.fillColor(Color.RED);
+                                        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
 
-                                    mMap.addCircle(circleOptions);
-                                }
+                                        mMap.addCircle(circleOptions);
+                                    }
 
-                                Marker marker = mMap.addMarker(markerOptions);
-                                marker.setTag(earthQuake.getDetailLink());
-                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lon),1));
-                                //Log.d("Quake: ", lon + ", " + lat);
+                                    Marker marker = mMap.addMarker(markerOptions);
+                                    marker.setTag(earthQuake.getDetailLink());
+                                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lon), 1));
+                                }//Log.d("Quake: ", lon + ", " + lat);
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -213,30 +226,70 @@ GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMapClickListener{
         getQuakeDetails(marker.getTag().toString());
     }
 
-    private void getQuakeDetails(String url) {
+    private void getQuakeDetails(final String url) {
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
                 (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
 
                     @Override
                     public void onResponse(JSONObject response) {
                         String detailUrl = "";
+                        String nearbyCity = "nearby-cities";
                         try {
                             JSONObject properties = response.getJSONObject("properties");
                             JSONObject products = properties.getJSONObject("products");
-                            JSONArray geoserve = products.getJSONArray("geoserve");
-                            for (int i = 0; i < geoserve.length();i++) {
-                                JSONObject geoserveObj = geoserve.getJSONObject(i);
+                            JSONArray nearby = products.getJSONArray(nearbyCity);
+                            for (int i = 0; i < nearby.length();i++) {
+                                JSONObject nearbyCityObj = nearby.getJSONObject(i);
 
-                                JSONObject contentObj = geoserveObj.getJSONObject("contents");
-                                JSONObject geoJsonObj = contentObj.getJSONObject("geoserve.json");
+                                JSONObject contentObj = nearbyCityObj.getJSONObject("contents");
+                                JSONObject cityJsonObj = contentObj.getJSONObject("nearby-cities.json");
 
-                                detailUrl = geoJsonObj.getString("url");
+                                detailUrl = cityJsonObj.getString("url");
+                                 if (detailUrl.equals("") || detailUrl == null) {
+                                Toast.makeText(getApplicationContext(), "There is no data can be retrieving", Toast.LENGTH_SHORT).show();
+
+                                 }
                             }
-                            Log.d("URL: ", detailUrl);
+                            //Log.d("URL: ", detailUrl);
+
                             getMoreDetails(detailUrl);
+                            getMoreDetails2(url);
+
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                    }
+                });
+        queue.add(jsonObjectRequest);
+    }
+    public void getMoreDetails(String url) {
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest
+                (Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        try {
+
+                            for (int i = 0; i < response.length(); i++) {
+                                JSONObject citiesObj = response.getJSONObject(i);
+
+                                stringBuilder.append("City: " + citiesObj.getString("name")
+                                        + "\n" + "Distance: " + citiesObj.getString("distance") + "km from the origin"
+                                        + "\n" + "Population: "
+                                        + citiesObj.getString("population"));
+
+                                stringBuilder.append("\n\n");
+
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
                     }
                 }, new Response.ErrorListener() {
 
@@ -245,10 +298,10 @@ GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMapClickListener{
 
                     }
                 });
-        queue.add(jsonObjectRequest);
+        queue.add(jsonArrayRequest);
     }
 
-    public void getMoreDetails(String url) {
+    public void getMoreDetails2(String url) {
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
                 (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
 
@@ -257,44 +310,46 @@ GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMapClickListener{
                         dialogBuilder = new AlertDialog.Builder(MapsActivity.this);
                         View view = getLayoutInflater().inflate(R.layout.popup, null);
 
-                        Button dismissButton = (Button) view.findViewById(R.id.dismissPop);
-                        Button dismissButtonTop = (Button) view.findViewById(R.id.dismissPopTop);
-                        TextView popList = (TextView) view.findViewById(R.id.popList);
-                        WebView htmlPop = (WebView) view.findViewById(R.id.htmlWebview);
+                        Button dismissButton = (Button) view.findViewById(R.id.dismissPopUp);
+                        Button dismissTopButton = (Button) view.findViewById(R.id.dismissPopTop);
+                        TextView popUpList = (TextView) view.findViewById(R.id.popList);
 
-                        StringBuilder stringBuilder = new StringBuilder();
                         try {
-                            if (response.has("tectonicSummary") && response.getString("tectonicSummary") != null) {
-                                JSONObject tectonic = response.getJSONObject("tectonicSummary");
-                                if (tectonic.has("text") && tectonic.getString("text") != null) {
-                                    String text = tectonic.getString("text");
-                                    htmlPop.loadDataWithBaseURL(null, text, "text/html", "UTF-8", null);
-                                   // Log.d("HTML", text);
-                                }
-                            }
-                            JSONArray cities = response.getJSONArray("cities");
-                            for (int i = 0; i < cities.length(); i++) {
-                                JSONObject citiesObj = cities.getJSONObject(i);
 
-                                stringBuilder.append("City: " + citiesObj.getString("name")
-                                        + "\n" + "Distance: " + citiesObj.getString("distance")
-                                        + "\n" + "Population: "
-                                        + citiesObj.getString("population"));
+                            JSONObject properties = response.getJSONObject("properties");
+                            JSONObject products = properties.getJSONObject("products");
+                            JSONArray origin = products.getJSONArray("phase-data");
+
+                            for (int i = 0; i < 1;i++) {
+                                JSONObject phaseDataObj = origin.getJSONObject(i);
+
+                                JSONObject contentObj = phaseDataObj.getJSONObject("properties");
+
+                                stringBuilder.append("Azimuthal Gap: " + contentObj.getString("azimuthal-gap")+ " degree"  +"\n"+
+                                        "Earthquake Depth: " +
+                                        contentObj.getString("depth") + " km");
 
                                 stringBuilder.append("\n\n");
 
                             }
-                            popList.setText(stringBuilder);
+                            Log.d("URL: ", stringBuilder.toString());
+                            stringBuilder.append("**When Azimuthal Gap > 180 degree, it might not be an accurate earthquake." +"\n"+"\n"+
+                                    "**When Earthquake Depth > 70 km, it would be a low damage earthquake.");
+
+                            popUpList.setText(stringBuilder);
+
                             dismissButton.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     dialog.dismiss();
+                                    stringBuilder.setLength(0);
                                 }
                             });
-                            dismissButtonTop.setOnClickListener(new View.OnClickListener() {
+                            dismissTopButton.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     dialog.dismiss();
+                                    stringBuilder.setLength(0);
                                 }
                             });
                             dialogBuilder.setView(view);
@@ -310,11 +365,13 @@ GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMapClickListener{
                     @Override
                     public void onErrorResponse(VolleyError error) {
 
-
                     }
                 });
         queue.add(jsonObjectRequest);
     }
+
+
+
     @Override
     public void onMapClick(LatLng latLng) {
 
