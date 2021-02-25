@@ -118,12 +118,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                //Ask for permission
+               
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
 
 
             } else {
-                //we have permission
+            
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
                 Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
